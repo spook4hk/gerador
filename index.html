@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gerador de Imagens — Faceless YouTube</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;font-size:15px}
+.wrap{max-width:860px;margin:0 auto;padding:2rem 1.5rem}
+h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:#666;margin-bottom:2rem}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.ct{font-size:15px;font-weight:600;margin-bottom:4px}
+.cs{font-size:13px;color:#777;margin-bottom:1rem}
+label{font-size:13px;color:#555;display:block;margin-bottom:5px;font-weight:500}
+input[type=text],input[type=password],select,textarea{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;background:#fafafa;color:#1a1a1a;outline:none;transition:border .15s}
+input:focus,textarea:focus,select:focus{border-color:#999;background:#fff}
+textarea{resize:vertical;line-height:1.6}
+.field{margin-bottom:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.tip{font-size:12px;color:#999;margin-top:5px;line-height:1.5}
+.tip a{color:#555}
+.btn{width:100%;padding:12px;font-size:15px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:8px;cursor:pointer;background:#fff;border:1px solid #ddd;color:#555;font-weight:500}
+.btn-sm:hover{background:#f5f5f3}
+.btn-up{padding:8px 16px;font-size:13px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer}
+.btn-up:disabled{opacity:.35;cursor:not-allowed}
+.status-bar{font-size:13px;color:#555;padding:10px 0;display:none;line-height:1.6}
+.prog{background:#eee;border-radius:99px;height:5px;margin:8px 0 4px;overflow:hidden;display:none}
+.prog-fill{height:100%;background:#1a1a1a;border-radius:99px;transition:width .4s;width:0%}
+.scene-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:1rem}
+.scard{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:14px}
+.stop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.snum{font-size:11px;font-weight:700;color:#aaa;white-space:nowrap;padding-top:3px;letter-spacing:.05em}
+.sprompt{font-size:12px;color:#555;font-style:italic;background:#f7f7f5;padding:8px 10px;border-radius:6px;line-height:1.6;flex:1}
+.sexcerpt{font-size:13px;color:#444;line-height:1.7;margin:10px 0 6px;border-left:3px solid #e5e5e5;padding-left:10px}
+.simg img{width:100%;border-radius:8px;border:1px solid #eee;margin-top:10px;display:block}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;white-space:nowrap}
+.bw{background:#f0f0f0;color:#666}
+.bg{background:#fef3c7;color:#92400e}
+.bd{background:#d1fae5;color:#065f46}
+.be{background:#fee2e2;color:#991b1b}
+.info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 14px;font-size:13px;color:#0c4a6e;margin-bottom:1rem;line-height:1.9}
+.info a{color:#0369a1}
+.info b{font-weight:600}
+.ref-slots{display:flex;flex-direction:column;gap:10px}
+.ref-row{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #e5e5e5;border-radius:10px;background:#fafafa}
+.ref-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;border:1px solid #ddd;display:none;flex-shrink:0}
+.ref-ph{width:52px;height:52px;border-radius:8px;background:#eee;border:1px dashed #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;flex-shrink:0;text-align:center;line-height:1.3}
+.ref-info{flex:1;min-width:0}
+.ref-fn{font-size:13px;font-weight:500;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref-st{font-size:12px;margin-top:2px}
+.ref-st.ok{color:#3b6d11}
+.ref-st.err{color:#991b1b}
+.ref-st.loading{color:#92400e}
+.ref-st.idle{color:#999}
+.ref-file-btn{padding:6px 12px;font-size:12px;border-radius:6px;cursor:pointer;background:#fff;border:1px solid #ddd;color:#555;white-space:nowrap;position:relative;overflow:hidden;flex-shrink:0}
+.ref-file-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.dl-row{display:flex;gap:10px;align-items:center;padding:.5rem 0 2rem}
+.tab-row{display:flex;gap:6px;margin-bottom:12px}
+.tab{padding:6px 14px;font-size:13px;border-radius:6px;cursor:pointer;border:1px solid #ddd;background:#fafafa;color:#555}
+.tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.file-loaded{font-size:12px;margin-top:5px;display:none}
+.file-loaded.ok{color:#3b6d11}
+.file-loaded.err{color:#991b1b}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Gerador de Imagens — Faceless YouTube</h1>
+<p class="sub">Cole o trecho, clique em gerar e deixe rodar.</p>
+
+<div class="info">
+  <b>Chaves necessárias:</b><br>
+  1. <b>Groq (grátis):</b> <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> → Create API Key<br>
+  2. <b>Leonardo:</b> painel Leonardo → API → sua chave
+</div>
+
+<div class="card">
+  <p class="ct">Configuração</p>
+  <p class="cs">Preencha uma vez por sessão</p>
+
+  <div class="row2">
+    <div class="field">
+      <label>API key do Groq</label>
+      <input type="password" id="groq-key" placeholder="gsk_..."/>
+    </div>
+    <div class="field">
+      <label>API key do Leonardo</label>
+      <input type="password" id="leo-key" placeholder="Cole sua chave..."/>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <label>Modelo Leonardo</label>
+      <select id="leo-model">
+        <option value="b24e16ff-06e3-43eb-8d33-4416c2d75876">Leonardo Phoenix</option>
+        <option value="aa77f04e-3eec-4034-9c07-d0f619684628">Leonardo Kino XL</option>
+        <option value="5c232a9e-9061-4777-980a-ddc8e65647c6">Leonardo Diffusion XL</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Proporção</label>
+      <select id="leo-ratio">
+        <option value="16:9">16:9 — YouTube</option>
+        <option value="9:16">9:16 — Shorts</option>
+        <option value="1:1">1:1 — quadrado</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Imagens de referência de estilo (até 5 URLs do Leonardo)</label>
+    <div id="ref-url-slots"></div>
+    <p class="tip">
+      Cole as URLs das suas imagens de referência que já estão no Leonardo.<br>
+      Para pegar a URL: abra a imagem no Leonardo → clique com botão direito na imagem → "Copiar endereço da imagem".<br>
+      O formato esperado é: <b>https://cdn.leonardo.ai/users/.../imagem.png</b>
+    </p>
+  </div>
+
+  <div class="field">
+    <label>Força do estilo de referência</label>
+    <select id="ref-strength">
+      <option value="High">Alta — segue bem o estilo da referência</option>
+      <option value="Mid" selected>Média — equilíbrio entre referência e prompt</option>
+      <option value="Low">Baixa — referência sutil</option>
+    </select>
+  </div>
+</div>
+
+<div class="card">
+  <p class="ct">Instruções do vídeo para o Groq</p>
+  <p class="cs">Ensine o Groq sobre o seu vídeo — história, personagens, estilo de cenas. Ele usa isso em todas as gerações.</p>
+
+  <div class="tab-row">
+    <button class="tab active" id="tab-btn-text" onclick="switchTab('text')">Digitar / colar</button>
+    <button class="tab" id="tab-btn-file" onclick="switchTab('file')">Subir arquivo TXT</button>
+  </div>
+
+  <div id="tab-panel-text" class="tab-panel active">
+    <textarea id="instr-text" style="min-height:200px" placeholder="Cole aqui as instruções do seu vídeo. Exemplos do que incluir:
+
+— Resumo completo da história (início ao fim)
+— Descrição dos personagens (aparência, como mudam ao longo do tempo)
+— Estilo visual desejado
+— Exemplos de cenas que você já fez e gostou
+— Localizações que aparecem no vídeo
+— Estado do sol/céu em cada fase da história
+
+Quanto mais detalhe, melhor o Groq vai gerar as cenas."></textarea>
+  </div>
+
+  <div id="tab-panel-file" class="tab-panel">
+    <div class="field">
+      <label>Subir arquivo TXT com as instruções</label>
+      <input type="file" id="instr-file" accept=".txt" onchange="loadInstrFile(this)" style="padding:6px"/>
+      <div class="file-loaded" id="file-loaded"></div>
+      <p class="tip">Salve suas instruções em um arquivo .txt e suba aqui. O texto será passado para o Groq automaticamente.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <p class="ct">Trecho para gerar</p>
+  <p class="cs">Cole o trecho da copy que quer gerar agora.</p>
+
+  <div class="field">
+    <textarea id="copy-input" style="min-height:140px" placeholder="Cole aqui o trecho da copy..."></textarea>
+  </div>
+
+  <div class="field">
+    <label>Contexto da sessão (deixe em branco na primeira rodada)</label>
+    <textarea id="ctx-input" style="min-height:60px" placeholder="Ex: Expert está no porão desde cena 15. Sol laranja-avermelhado. Sem energia elétrica."></textarea>
+  </div>
+
+  <button class="btn" id="btn-gen" onclick="startGeneration()">Gerar todas as imagens automaticamente</button>
+  <div class="status-bar" id="status-msg"></div>
+  <div class="prog" id="prog-wrap"><div class="prog-fill" id="prog-fill"></div></div>
+</div>
+
+<div id="scenes-out"></div>
+
+<div id="dl-section" style="display:none">
+  <div class="dl-row">
+    <button class="btn-sm" onclick="downloadAll()">Baixar todas as imagens</button>
+    <span id="dl-count" style="font-size:13px;color:#777"></span>
+  </div>
+</div>
+
+</div>
+<script>
+var GROQ_URL  = "https://api.groq.com/openai/v1/chat/completions";
+var LEO_GEN   = "https://cloud.leonardo.ai/api/rest/v1/generations";
+var LEO_GET   = "https://cloud.leonardo.ai/api/rest/v1/generations/";
+var NUM_SLOTS = 5;
+var allImgs   = [];
+var instrFile = "";
+var activeTab = "text";
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById("tab-panel-text").className = "tab-panel" + (tab === "text" ? " active" : "");
+  document.getElementById("tab-panel-file").className = "tab-panel" + (tab === "file" ? " active" : "");
+  document.getElementById("tab-btn-text").className = "tab" + (tab === "text" ? " active" : "");
+  document.getElementById("tab-btn-file").className = "tab" + (tab === "file" ? " active" : "");
+}
+
+function loadInstrFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var el = document.getElementById("file-loaded");
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    instrFile = e.target.result;
+    el.className = "file-loaded ok";
+    el.style.display = "block";
+    el.textContent = "✓ Carregado: " + file.name + " (" + instrFile.length + " caracteres)";
+  };
+  reader.onerror = function() {
+    el.className = "file-loaded err";
+    el.style.display = "block";
+    el.textContent = "Erro ao ler o arquivo.";
+  };
+  reader.readAsText(file);
+}
+
+function getInstructions() {
+  if (activeTab === "text") return document.getElementById("instr-text").value.trim();
+  return instrFile;
+}
+
+// Build URL input slots
+(function() {
+  var container = document.getElementById("ref-url-slots");
+  for (var i = 0; i < NUM_SLOTS; i++) {
+    var row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:8px";
+    var lbl = document.createElement("span");
+    lbl.style.cssText = "font-size:12px;color:#aaa;font-weight:600;min-width:20px";
+    lbl.textContent = (i+1) + ".";
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = "ref-url-" + i;
+    inp.placeholder = "https://cdn.leonardo.ai/users/.../imagem.png";
+    inp.style.cssText = "flex:1;font-size:13px";
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    container.appendChild(row);
+  }
+})();
+
+// Extract image ID from Leonardo CDN URL
+// URL format: https://cdn.leonardo.ai/users/USER_ID/initImages/IMAGE_ID.png
+// or: https://cdn.leonardo.ai/users/USER_ID/generations/GEN_ID/IMAGE_ID.jpeg
+function extractRefId(url) {
+  if (!url) return null;
+  url = url.trim();
+  if (!url.startsWith("https://cdn.leonardo.ai")) return null;
+  // Extract UUID from the URL — last UUID segment before the extension
+  var matches = url.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi);
+  if (!matches || matches.length === 0) return null;
+  return matches[matches.length - 1]; // last UUID = image ID
+}
+
+function getRefIds() {
+  var ids = [];
+  for (var i = 0; i < NUM_SLOTS; i++) {
+    var url = document.getElementById("ref-url-" + i).value.trim();
+    var id = extractRefId(url);
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+var GUIDE_EXAMPLES = [
+  "SCENE DIRECTION EXAMPLES — match this exact level of detail:",
+  "Text: Day 1. tragic news. → Scene: Wide shot of Earth and Sun in solar system from outer space. Sun slightly larger than normal.",
+  "Text: You wake up at 6:30 a.m. → Scene: Top-down angle. Expert lying in bed just waking up. Bedroom visible.",
+  "Text: Your phone alarm is making that irritating sound → Scene: Close-up of phone on bedside table showing 6:30 AM alarm.",
+  "Text: You stretch out your arm, eyes still half-closed, and turn it off. → Scene: Expert in bed, arm stretched to bedside table to turn off alarm.",
+  "Text: The room is warm—strangely warm for a Tuesday in the middle of winter → Scene: Expert standing in bedroom sweating, confused expression.",
+  "Text: You turn on the coffee maker. → Scene: Expert at kitchen counter pressing coffee maker button.",
+  "Text: You switch on the TV → Scene: Close-up of Expert hand holding TV remote pressing power button.",
+  "One image per sentence. Specific camera angle. Specific character action. Specific environment."
+].join("\n");
+
+async function getScenes(copy, ctx, groqKey, instructions) {
+  var systemParts = ["You are a film director and storyboard artist for a stickman illustration YouTube video.",""];
+  if (instructions) { systemParts.push("VIDEO INSTRUCTIONS FROM CREATOR:"); systemParts.push(instructions); systemParts.push(""); }
+  systemParts.push(GUIDE_EXAMPLES);
+  systemParts.push("");
+  if (ctx) { systemParts.push("ALREADY GENERATED THIS SESSION: " + ctx); systemParts.push(""); }
+  systemParts.push("YOUR JOB: For EVERY sentence or small visual idea, create ONE scene.");
+  systemParts.push("RULES: One scene per sentence minimum. Exact camera angle and moment. Describe character position, action, environment. Describe characters consistently. Each scene self-contained. Prompts in English.");
+  systemParts.push("Return ONLY raw JSON array: [{\"excerpt\":\"sentence\",\"prompt\":\"scene description\"}]. No markdown, no explanation.");
+
+  var resp = await fetch(GROQ_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + groqKey },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: systemParts.join("\n") },
+        { role: "user", content: "Create one scene per sentence for this excerpt:\n\n" + copy }
+      ],
+      temperature: 0.6,
+      max_tokens: 8000
+    })
+  });
+
+  if (!resp.ok) {
+    var e = await resp.json().catch(function(){ return {}; });
+    throw new Error("Groq: " + (e.error && e.error.message ? e.error.message : resp.status));
+  }
+
+  var data  = await resp.json();
+  var text  = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
+  var clean = text.replace(/```json|```/g,"").trim();
+  try { return JSON.parse(clean); }
+  catch(err) {
+    var m = clean.match(/\[[\s\S]*\]/);
+    if (m) return JSON.parse(m[0]);
+    throw new Error("Groq não retornou JSON válido. Tente com trecho menor.");
+  }
+}
+
+function getDims(r) {
+  if (r === "16:9") return { width: 1360, height: 768 };
+  if (r === "9:16") return { width: 768, height: 1360 };
+  return { width: 1024, height: 1024 };
+}
+
+async function genImage(prompt, leoKey, model, ratio, strengthType) {
+  var dims = getDims(ratio);
+  var body = {
+    prompt: prompt + ". stickman illustration, black ink outlines on white background, 2D flat art, expressive stickman, NO 3D, NO realistic",
+    modelId: model,
+    width: dims.width,
+    height: dims.height,
+    num_images: 1,
+    guidance_scale: 7,
+    num_inference_steps: 30,
+    alchemy: true
+  };
+  var refIds = getRefIds();
+  if (refIds.length > 0) {
+    body.controlnets = refIds.map(function(id) {
+      return { initImageId: id, initImageType: "UPLOADED", preprocessorId: 67, strengthType: strengthType };
+    });
+  }
+  var r = await fetch(LEO_GEN, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + leoKey },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) {
+    var e = await r.json().catch(function(){ return {}; });
+    throw new Error("Leonardo: " + (e.error || r.status));
+  }
+  var data  = await r.json();
+  var genId = data.sdGenerationJob && data.sdGenerationJob.generationId;
+  if (!genId) throw new Error("Leonardo não retornou ID");
+  for (var i = 0; i < 45; i++) {
+    await new Promise(function(res){ setTimeout(res, 3500); });
+    var poll = await fetch(LEO_GET + genId, { headers: { "Authorization": "Bearer " + leoKey } });
+    var pd   = await poll.json();
+    var imgs = pd.generations_by_pk && pd.generations_by_pk.generated_images;
+    if (imgs && imgs.length > 0 && imgs[0].url) return imgs[0].url;
+  }
+  throw new Error("Timeout — Leonardo demorou demais.");
+}
+
+function setStatus(msg) { var el = document.getElementById("status-msg"); el.style.display = "block"; el.textContent = msg; }
+function setProgress(done, total) { document.getElementById("prog-wrap").style.display = "block"; document.getElementById("prog-fill").style.width = Math.round(done/total*100) + "%"; }
+function setBadge(i,cls,txt) { var b = document.getElementById("badge-"+i); if(b){ b.className="badge "+cls; b.textContent=txt; } }
+function showImg(i,url) {
+  var el = document.getElementById("img-"+i);
+  if(el) el.innerHTML = '<img src="'+url+'" alt="Cena '+(i+1)+'"/>';
+  allImgs.push({i:i,url:url});
+  document.getElementById("dl-count").textContent = allImgs.length + " imagens prontas";
+}
+
+function renderScenes(scenes) {
+  var out = document.getElementById("scenes-out");
+  out.innerHTML = "";
+  var hdr = document.createElement("div");
+  hdr.className = "card";
+  hdr.style.marginBottom = "12px";
+  hdr.innerHTML = '<p class="ct">'+scenes.length+' cenas detectadas</p><p class="cs">As imagens aparecem conforme são geradas. Pode minimizar e voltar depois.</p>';
+  out.appendChild(hdr);
+  var grid = document.createElement("div");
+  grid.className = "scene-grid";
+  for (var i = 0; i < scenes.length; i++) {
+    var s = scenes[i];
+    var card = document.createElement("div");
+    card.className = "scard";
+    card.id = "sc-"+i;
+    card.innerHTML =
+      '<div class="stop"><span class="snum">CENA '+(i+1)+'</span><span class="badge bw" id="badge-'+i+'">Aguardando</span></div>'+
+      '<div class="sprompt">'+(s.prompt||"").replace(/\n/g,"<br>")+'</div>'+
+      '<p class="sexcerpt">'+(s.excerpt||"")+'</p>'+
+      '<div id="img-'+i+'"></div>';
+    grid.appendChild(card);
+  }
+  out.appendChild(grid);
+}
+
+async function startGeneration() {
+  var groqKey      = document.getElementById("groq-key").value.trim();
+  var leoKey       = document.getElementById("leo-key").value.trim();
+  var copy         = document.getElementById("copy-input").value.trim();
+  var ctx          = document.getElementById("ctx-input").value.trim();
+  var model        = document.getElementById("leo-model").value;
+  var ratio        = document.getElementById("leo-ratio").value;
+  var strengthType = document.getElementById("ref-strength").value;
+  var instructions = getInstructions();
+
+  if (!groqKey) { alert("Cole sua API key do Groq."); return; }
+  if (!leoKey)  { alert("Cole sua API key do Leonardo."); return; }
+  if (!copy)    { alert("Cole um trecho da copy."); return; }
+
+  if (!instructions) {
+    if (!confirm("Nenhuma instrução foi fornecida para o Groq.\nAs cenas podem ficar genéricas.\nContinuar mesmo assim?")) return;
+  }
+  var uploadedCount = getRefIds().length;
+  if (uploadedCount === 0) {
+    if (!confirm("Nenhuma URL de referência foi preenchida.\nAs imagens serão geradas sem consistência de estilo.\nContinuar mesmo assim?")) return;
+  }
+
+  var btn = document.getElementById("btn-gen");
+  btn.disabled = true;
+  allImgs = [];
+  document.getElementById("dl-section").style.display = "none";
+  document.getElementById("dl-count").textContent = "";
+  document.getElementById("scenes-out").innerHTML = "";
+
+  try {
+    setStatus("Groq está analisando o trecho e criando o storyboard...");
+    var scenes = await getScenes(copy, ctx, groqKey, instructions);
+    renderScenes(scenes);
+    setStatus(scenes.length + " cenas prontas. Enviando para o Leonardo...");
+    setProgress(0, scenes.length);
+
+    for (var i = 0; i < scenes.length; i++) {
+      setBadge(i, "bg", "Gerando...");
+      document.getElementById("sc-"+i).scrollIntoView({ behavior:"smooth", block:"center" });
+      try {
+        var url = await genImage(scenes[i].prompt, leoKey, model, ratio, strengthType);
+        showImg(i, url);
+        setBadge(i, "bd", "Pronta ✓");
+      } catch(e) {
+        setBadge(i, "be", "Erro");
+        document.getElementById("img-"+i).innerHTML = '<p style="font-size:12px;color:#991b1b;padding:8px 0">'+e.message+'</p>';
+      }
+      setProgress(i+1, scenes.length);
+      setStatus((i+1) + " de " + scenes.length + " imagens geradas...");
+    }
+    setStatus("Concluído! " + allImgs.length + " de " + scenes.length + " imagens geradas.");
+    document.getElementById("dl-section").style.display = "block";
+  } catch(e) {
+    setStatus("Erro: " + e.message);
+  }
+  btn.disabled = false;
+}
+
+async function downloadAll() {
+  for (var i = 0; i < allImgs.length; i++) {
+    var img = allImgs[i];
+    var a = document.createElement("a");
+    a.href = img.url;
+    a.download = "cena-" + String(img.i+1).padStart(3,"0") + ".jpg";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    await new Promise(function(r){ setTimeout(r,500); });
+  }
+}
+</script>
+</body>
+</html>
